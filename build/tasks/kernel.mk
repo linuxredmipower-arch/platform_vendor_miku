@@ -104,12 +104,6 @@ DTBS_OUT := $(DTB_OUT)/out
 # Stage only the camera framework overlay (TARGET_MERGE_DTBS_WILDCARD) and
 # the device sensor overlay (TARGET_DEVICE*) instead.
 DTBS_TECHPACK := $(DTB_OUT)/techpack
-$(DTBS_TECHPACK): $(DTBS_OUT)
-	$(hide) rm -rf $@
-	$(hide) mkdir -p $@
-	$(hide) cp $$(find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom -type f -name "*.dtbo" ! -path "*/camera/*") $@/
-	$(hide) cp $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom/camera/$(TARGET_MERGE_DTBS_WILDCARD)-camera.dtbo $@/
-	$(hide) cp $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom/camera/$(TARGET_DEVICE)*-camera-sensor.dtbo $@/
 endif
 KERNEL_CONFIG := $(KERNEL_OUT)/.config
 KERNEL_RELEASE := $(KERNEL_OUT)/include/config/kernel.release
@@ -551,7 +545,7 @@ MKDTBOIMG := $(HOST_OUT_EXECUTABLES)/mkdtboimg$(HOST_EXECUTABLE_SUFFIX)
 $(INSTALLED_DTBIMAGE_TARGET): $(MKDTBOIMG)
 endif
 ifeq ($(BOARD_USES_QCOM_MERGE_DTBS_SCRIPT),true)
-$(INSTALLED_DTBIMAGE_TARGET): $(HOST_OUT_EXECUTABLES)/fdtget $(HOST_OUT_EXECUTABLES)/fdtput $(HOST_OUT_EXECUTABLES)/fdtoverlay $(HOST_OUT_EXECUTABLES)/fdtoverlaymerge $(HOST_OUT_EXECUTABLES)/ufdt_apply_overlay $(DTBS_BASE) $(DTBS_OUT) $(DTBS_TECHPACK)
+$(INSTALLED_DTBIMAGE_TARGET): $(HOST_OUT_EXECUTABLES)/fdtget $(HOST_OUT_EXECUTABLES)/fdtput $(HOST_OUT_EXECUTABLES)/fdtoverlay $(HOST_OUT_EXECUTABLES)/fdtoverlaymerge $(HOST_OUT_EXECUTABLES)/ufdt_apply_overlay $(DTBS_BASE) $(DTBS_OUT)
 endif
 $(INSTALLED_DTBIMAGE_TARGET): $(DTC) $(DTB_OUT)
 ifeq ($(TARGET_WANTS_EMPTY_DTB),true)
@@ -569,6 +563,14 @@ ifeq ($(BOARD_USES_QCOM_MERGE_DTBS_SCRIPT),true)
 	$(hide) find $(DTBS_BASE) -type f -name "*.dtb*" | xargs rm -f
 	$(hide) find $(DTBS_OUT) -type f -name "*.dtb*" | xargs rm -f
 	mv $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom/*.dtb $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/*/*.dtbo $(DTBS_BASE)/
+	# Re-stage techpack every build: DTBS_TECHPACK has no reliable file
+	# dependency (sources are found at runtime), so a standalone target
+	# would go stale whenever the kernel dtbo outputs change.
+	$(hide) rm -rf $(DTBS_TECHPACK)
+	$(hide) mkdir -p $(DTBS_TECHPACK)
+	$(hide) cp $$(find $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom -type f -name "*.dtbo" ! -path "*/camera/*") $(DTBS_TECHPACK)/
+	$(hide) cp $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom/camera/$(TARGET_MERGE_DTBS_WILDCARD)-camera.dtbo $(DTBS_TECHPACK)/
+	$(hide) cp $(DTB_OUT)/arch/$(KERNEL_ARCH)/boot/dts/vendor/qcom/camera/$(TARGET_DEVICE)*-camera-sensor.dtbo $(DTBS_TECHPACK)/
 	PATH=$(abspath $(HOST_OUT_EXECUTABLES)):$${PATH} python3 $(BUILD_TOP)/vendor/miku/build/tools/merge_dtbs.py $(DTBS_BASE) $(DTBS_TECHPACK) $(DTBS_OUT)
 	cat $(shell find $(DTB_OUT)/out -type f -name "${TARGET_MERGE_DTBS_WILDCARD}.dtb" | sort) > $@
 else
