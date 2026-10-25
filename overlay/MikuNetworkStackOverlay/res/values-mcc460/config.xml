@@ -16,15 +16,14 @@
 -->
 <resources>
 
-    <string name="config_captive_portal_http_url" translatable="false">http://conn1.oppomobile.com/generate_204</string>
+    <string name="config_captive_portal_http_url" translatable="false">http://connect.rom.miui.com/generate_204</string>
 
-    <string name="config_captive_portal_https_url" translatable="false">https://conn1.oppomobile.com/generate_204</string>
+    <string name="config_captive_portal_https_url" translatable="false">https://connect.rom.miui.com/generate_204</string>
 
     <string-array name="config_captive_portal_fallback_urls" translatable="false">
+        <item>http://connectivitycheck.gstatic.cn/generate_204</item>
+        <item>http://conn1.oppomobile.com/generate_204</item>
         <item>http://www.qualcomm.cn/generate_204</item>
-        <item>http://connectivitycheck.gstatic.com/generate_204</item>
-        <item>http://www.googleapis.cn/generate_204</item>
-        <item>http://play.googleapis.com/generate_204</item>
     </string-array>
 
 </resources>
